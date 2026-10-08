@@ -1,0 +1,137 @@
+/* ==========================================================================
+   net2phone / uContact — design tokens (Manual de marca v2.1)
+   Importar una sola vez en el formulario (App.vue o main.js).
+   ========================================================================== */
+:root {
+  /* --- Colores primarios ------------------------------------------------ */
+  --n2p-navy: #002540;        /* Azul corporativo: texto, títulos, íconos, botones */
+  --n2p-white: #ffffff;
+
+  /* --- Acentos (degradados, detalles, NO fondos sólidos ni texto) -------- */
+  --n2p-pink: #fe0687;
+  --n2p-purple: #740ce8;
+  --n2p-blue: #0095ff;
+
+  /* --- Secundarios / tonos ---------------------------------------------- */
+  --n2p-pink-300: #ff69b7;
+  --n2p-purple-300: #a562f0;
+  --n2p-blue-300: #61bdff;
+  --n2p-pink-100: #ffdaed;
+  --n2p-purple-100: #e0cafa;
+  --n2p-blue-100: #cceaff;
+  --n2p-navy-300: #c5cdd4;    /* tono medio claro de azul oscuro (bordes) */
+  --n2p-navy-600: #435e72;    /* tono medio de azul oscuro (texto secundario) */
+
+  /* --- Neutros ----------------------------------------------------------- */
+  --n2p-black: #000000;
+  --n2p-gray-950: #0e1112;
+  --n2p-gray-900: #242526;
+  --n2p-gray-850: #272829;
+  --n2p-gray-800: #393b3c;
+  --n2p-gray-700: #505253;
+  --n2p-gray-600: #686a6b;
+  --n2p-gray-500: #818384;
+  --n2p-gray-400: #9b9d9e;
+  --n2p-gray-300: #b6b8b9;
+  --n2p-gray-100: #efefef;
+  --n2p-gray-50: #f5f5f5;
+
+  /* --- Degradados aprobados (orden de colores fijo: rosa → violeta → azul) */
+  --n2p-gradient-primary: linear-gradient(90deg, #fe0687 0%, #740ce8 50%, #0095ff 100%);
+  --n2p-gradient-secondary: linear-gradient(
+    90deg,
+    rgba(254, 6, 135, 0.2) 0%,
+    rgba(116, 12, 232, 0.2) 50%,
+    rgba(0, 149, 255, 0.2) 100%
+  ), #ffffff;
+
+  /* --- Roles semánticos para formularios -------------------------------- */
+  --color-text: var(--n2p-navy);
+  --color-text-muted: var(--n2p-navy-600);      /* 6.8:1 sobre blanco */
+  --color-bg: var(--n2p-white);
+  --color-surface: var(--n2p-gray-50);
+  --color-border: var(--n2p-navy-300);
+  --color-border-strong: var(--n2p-navy-600);
+  --color-focus: var(--n2p-blue);               /* anillo de foco (3.1:1, válido para no-texto) */
+  --color-button-bg: var(--n2p-navy);           /* 15.7:1 con texto blanco */
+  --color-button-text: var(--n2p-white);
+  --color-error: var(--n2p-pink);               /* solo bordes/íconos: 3.8:1, no usar en texto chico */
+  --color-error-bg: var(--n2p-pink-100);
+  --color-info-bg: var(--n2p-blue-100);
+  --color-disabled: var(--n2p-gray-500);
+  --color-readonly-bg: var(--n2p-gray-50);
+
+  /* --- Tipografía -------------------------------------------------------- */
+  /* IDT Sans es propietaria; Open Sans es el reemplazo oficial. */
+  --font-family: "IDT Sans", "Open Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fw-light: 300;      /* cuerpo de texto */
+  --fw-regular: 400;
+  --fw-demibold: 600;   /* labels, pretítulos */
+  --fw-bold: 700;       /* botones y links */
+  --fw-extrabold: 800;  /* títulos */
+  --fw-black: 800;      /* Black → Open Sans no tiene 900; usar 800 */
+
+  /* Escala del manual (piezas A4 / web) */
+  --fs-h1: 22px;
+  --fs-h2: 18px;
+  --fs-h3: 14px;
+  --fs-h4: 13px;
+  --fs-h5: 10px;
+  --fs-pretitle: 10px;  /* MAYÚSCULAS, DemiBold */
+  --fs-body: 12px;
+  --fs-small: 10px;
+  /* Ajuste para formularios operativos (validar con Marketing): */
+  --fs-label: 12px;
+  --fs-input: 14px;
+  --fs-button: 12px;    /* manual: 10px Bold en documentos */
+
+  /* Interlineado = tamaño + 6px */
+  --lh-h1: 28px;
+  --lh-h2: 24px;
+  --lh-body: 18px;
+  --lh-input: 20px;
+
+  /* --- Forma y espaciado ------------------------------------------------- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-pill: 999px;
+  --radius-image: 22px;  /* imágenes del manual */
+  --border-gradient-width: 2px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* --- Íconos (biblioteca MyIcons) --------------------------------------- */
+  --icon-default: 24px;   /* trazo 1.5px */
+  --icon-emphasis: 28px;  /* trazo 1.75px */
+  --icon-featured: 32px;  /* trazo 2px */
+}
+
+/* Utilidades de marca reutilizables */
+.n2p-gradient-border {
+  border: var(--border-gradient-width) solid transparent;
+  background:
+    linear-gradient(var(--color-bg), var(--color-bg)) padding-box,
+    var(--n2p-gradient-primary) border-box;
+}
+.n2p-gradient-word {
+  background: var(--n2p-gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: var(--fw-extrabold);
+}
+.n2p-gradient-line {
+  height: var(--border-gradient-width);
+  background: var(--n2p-gradient-primary);
+}
+.n2p-pretitle {
+  font-size: var(--fs-pretitle);
+  font-weight: var(--fw-demibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}

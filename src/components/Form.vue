@@ -1,154 +1,165 @@
 <script setup>
-import { ref, watch } from "vue";
-const emit = defineEmits(["confirm"]);
+import { reactive, computed, watch } from "vue";
+import { t } from "../utils/i18n";
 
-const props = defineProps(["interaction"]);
+const props = defineProps({
+  interaction: { type: Object, required: true }, // salida de normalizeInteraction()
+  loading: { type: Boolean, default: false },
+});
+const emit = defineEmits(["close", "confirm"]);
 
-const interaction = ref({});
+// Campos fijos de la interacción (label traducido con la misma clave)
+const baseFields = ["clientId", "clientName", "channel", "campaign"];
 
-const fields = ref([
-  { text: "Client Id", value: "clientId" },
-  { text: "Client name", value: "clientName" },
-  { text: "Channel", value: "channel" },
-  { text: "Campaign", value: "campaign" },
-]);
+// Campos de la lista del marcador: se generan con lo que llegue en la interacción.
+// El label es el nombre exacto de la columna cargada como "Parámetro".
+const listFields = computed(() => Object.keys(props.interaction.customData || {}));
 
-const fieldsData = ref([
-  { text: "Nombre", value: "Nombre" },
-  { text: "Apellido", value: "Apellido" },
-  { text: "Empresa", value: "Empresa" },
-]);
+const model = reactive({});
 
+// immediate: carga los valores apenas llega (o cambia) la interacción
 watch(
   () => props.interaction,
-  (newValue) => {
-    interaction.value = newValue;
-  }
+  (i) => {
+    for (const key of baseFields) model[key] = String(i[key] ?? "");
+    for (const [key, value] of Object.entries(i.customData || {})) {
+      model["data." + key] = value == null ? "" : String(value);
+    }
+  },
+  { immediate: true }
 );
 
-const validate = () => {
-  let valid = true;
-  fields.value.forEach((field) => {
-    let input = document.getElementById(field.value);
-    let label = document.getElementById("label" + field.value);
-    if (!input.value) {
-      label.classList.add("error");
-      input.classList.add("error");
-      valid = false;
-      return false;
-    }
-    label.classList.remove("error");
-    input.classList.remove("error");
-  });
-  if (valid) {
-    emit("confirm");
-  }
-};
+// Con interacción los datos son solo lectura (vista previa); en modo manual se pueden completar
+const readonly = computed(() => !!props.interaction.hasInteraction);
 </script>
 
 <template>
-  <form class="form" action="javascript:void(0);">
-    <div class="row" v-for="(field, index) in fields" :key="index">
-      <label :for="field.value" :id="'label' + field.value">
-        {{ field.text }}
-      </label>
-      <input
-        type="text"
-        :name="field.value"
-        :id="field.value"
-        v-model="interaction[field.value]"
-      />
+  <form class="form" novalidate @submit.prevent="emit('confirm')">
+    <div class="body">
+      <p v-if="loading" class="muted">{{ t("loading") }}</p>
+
+      <section>
+        <h2 class="section-title">{{ t("sectionInteraction") }}</h2>
+        <div class="grid">
+          <div v-for="key in baseFields" :key="key" class="row">
+            <label :for="key">{{ t(key) }}</label>
+            <input :id="key" v-model="model[key]" type="text" :name="key" :readonly="readonly" />
+          </div>
+        </div>
+      </section>
+
+      <section v-if="!loading && interaction.hasInteraction">
+        <h2 class="section-title">{{ t("sectionList") }}</h2>
+        <div v-if="listFields.length" class="grid">
+          <div v-for="key in listFields" :key="key" class="row">
+            <label :for="'data-' + key">{{ key }}</label>
+            <input
+              :id="'data-' + key"
+              v-model="model['data.' + key]"
+              type="text"
+              :name="key"
+              :readonly="readonly"
+            />
+          </div>
+        </div>
+        <p v-else class="muted">{{ t("noListData") }}</p>
+      </section>
     </div>
 
-    <div class="row" v-for="(field, index) in fieldsData" :key="index">
-      <label :for="field.value" :id="'label' + field.value">
-        {{ field.text }}
-      </label>
-      <input
-        type="text"
-        :name="field.value"
-        :id="field.value"
-        v-model="interaction.data[field.value]"
-      />
+    <div class="actions">
+      <button type="button" class="btn btn--secondary" @click="emit('close')">{{ t("cancel") }}</button>
+      <button type="submit" class="btn btn--primary" :disabled="loading">{{ t("confirm") }}</button>
     </div>
-  
-  <!-- Los botones podrian quedan comentados porque no hacen nada particular -->
-    <div class="buttonContainer">
-      <button @click="$emit('close')" class="cancel">Cancel</button>
-      <button @click="validate" class="confirm">Confirm</button>
-    </div>
-  
   </form>
 </template>
 
 <style scoped>
-.form {
-  margin: 0 auto;
-  width: 100%;
-  height: 100%;
-
-  position: relative;
-}
-.row {
-  margin: 0 auto;
-  width: 80%;
-  padding: 0.5rem;
-  /* background: red; */
-}
-.buttonContainer {
-  position: absolute;
-  width: 100%;
-  height: 4rem;
+.form { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-5);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  bottom: 0;
+  flex-direction: column;
+  gap: var(--space-5);
 }
-.buttonContainer button {
-  width: 37.5%;
-  margin: 0 2.5%;
-  height: 2rem;
-  border: 1px solid rgb(37, 37, 37);
-  border-radius: 1rem;
-  transition: 0.5s;
+.section-title {
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-extrabold);
+  color: var(--color-text);
+  margin-bottom: var(--space-3);
 }
-.buttonContainer .confirm {
-  color: white;
-  border: none;
-  background: #0095ff;
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-4) var(--space-5);
 }
-.buttonContainer .confirm:hover {
-  background: #026db9;
-}
-.buttonContainer .cancel {
-  background: #ffff;
-}
-.buttonContainer .cancel:hover {
-  background: rgb(197, 197, 197);
-}
+.muted { color: var(--color-text-muted); }
+.row { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
 label {
-  font-family: Verdana, sans-serif;
-  font-size: 1rem;
+  font-size: var(--fs-label);
+  font-weight: var(--fw-demibold);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
 }
 input {
-  margin: 5px auto;
-  padding-left: 5px;
-  border: 1px solid rgb(37, 37, 37);
-  border-radius: 5px;
+  font-family: inherit;
+  font-size: var(--fs-input);
+  line-height: var(--lh-input);
+  font-weight: var(--fw-regular);
+  color: var(--color-text);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
   width: 100%;
-  height: 2rem;
-  transition: 0.5s !important;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
+input:hover:not([readonly]) { border-color: var(--color-border-strong); }
 input:focus {
-  border: 1px solid #0095ff !important;
   outline: none;
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 3px var(--n2p-blue-100);
 }
-.error {
-  color: #f44349;
-}
+input[readonly] { background: var(--color-readonly-bg); }
 
-input.error {
-  color: black;
-  border: 1px solid #f44349 !important;
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--n2p-gray-100);
+}
+.btn {
+  font-family: inherit;
+  font-size: var(--fs-button);
+  font-weight: var(--fw-bold);
+  min-width: 140px;
+  height: 40px;
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.btn:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+.btn--primary {
+  background: var(--color-button-bg);
+  color: var(--color-button-text);
+  border: 1px solid var(--color-button-bg);
+}
+.btn--primary:hover:not(:disabled) { background: var(--n2p-navy-600); border-color: var(--n2p-navy-600); }
+.btn--primary:disabled { background: var(--color-disabled); border-color: var(--color-disabled); cursor: default; }
+.btn--secondary {
+  background: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-text);
+}
+.btn--secondary:hover { background: var(--n2p-gray-50); }
+
+/* Evita zoom automático en iOS al enfocar inputs */
+@media (max-width: 600px) {
+  input { font-size: 16px; }
+  .actions { flex-direction: column-reverse; }
+  .btn { width: 100%; }
 }
 </style>
